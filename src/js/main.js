@@ -1,5 +1,6 @@
 var canvas;
 var ctx;
+var boardSelect;
 
 var mouseState = {
   mouseDown: false,
@@ -69,9 +70,16 @@ window.onload = () => {
   canvas.addEventListener('mouseout', mouseOutListener);
   canvas.addEventListener('click', clickListener);
 
-  window.addEventListener('keyup', keyUpListener);
+  canvas.addEventListener('keyup', keyUpListener);
 
-  fakeSetup();
+  boardSelect = document.getElementById('board-select');
+  for (let boardName in predefinedBoards) {
+    let option = document.createElement("option");
+    option.text = boardName;
+    boardSelect.add(option);
+  }
+
+  // fakeSetup();
   refresh();
 };
 
@@ -228,18 +236,16 @@ function keyUpListener(e) {
       step();
       break;
     case 'ArrowUp':
-      player.intervalMs *= .8;
+      speedUp()
       break;
     case 'ArrowDown':
-      player.intervalMs /= .8;
+      speedDown();
       break;
     case '+':
-      camera1.scale++;
-      refresh();
+      scaleUp();
       break;
     case '-':
-      camera1.scale = Math.max(1, camera1.scale - 1);
-      refresh();
+      scaleDown();
       break;
   }
 }
@@ -255,11 +261,50 @@ function startStopAutoplaying() {
 }
 
 function step() {
+  let startTime = +new Date();
   board1 = getNextBoard(board1);
   if (player.playing) {
-    player.timeoutId = setTimeout(step, player.intervalMs);
+    let timeLeftInInterval = Math.max(0, player.intervalMs - (+new Date() - startTime));;
+    console.log(`doing next step in ${timeLeftInInterval}ms`);
+    player.timeoutId = setTimeout(step, timeLeftInInterval);
   }
   refresh();
+}
+
+function speedUp() {
+  player.intervalMs *= .8;
+}
+
+function speedDown() {
+  player.intervalMs /= .8;
+}
+
+function scaleUp() {
+  camera1.scale++;
+  refresh();
+}
+
+function scaleDown() {
+  camera1.scale = Math.max(1, camera1.scale - 1);
+  refresh();
+}
+
+function showHideControls() {
+  let buttonsDiv = document.getElementById('buttons-div');
+  let showHideButton = document.getElementById('show-hide-button');
+  buttonsDiv.hidden = !buttonsDiv.hidden;
+  showHideButton.innerHTML = buttonsDiv.hidden ? '>' : '<';
+
+}
+
+function loadSelectedBoard() {
+  let selectedBoardName = boardSelect.value;
+  console.log(`user tried to load this board: ${selectedBoardName}`);
+  let selectedBoard = predefinedBoards[selectedBoardName];
+  if (selectedBoard) {
+    board1 = JSON.parse(JSON.stringify(selectedBoard));
+    refresh();
+  }
 }
 
 function fakeSetup() {

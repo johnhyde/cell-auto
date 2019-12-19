@@ -1,7 +1,36 @@
 <html>
-    <body style="margin: 0">
+    <head>
+        <link rel="stylesheet" href="/styles.css" type="text/css">
+    </head>
+    <body>
+        <div class="control-tray noselect">
+            <div id= "buttons-div">
+                <p>
+                    <button onclick="startStopAutoplaying()">Start/Stop</button>
+                    <button onclick="step()">Next</button>
+                </p>
+                <p>
+                    <button onclick="speedUp()">Speed Up</button>
+                    <button onclick="speedDown()">Slow Down</button>
+                </p>
+                <p>
+                    <button onclick="scaleUp()">Zoom in</button>
+                    <button onclick="scaleDown()">Zoom Out</button>
+                </p>
+                <p>
+                    <select id="board-select"></select>
+                    <button onclick="loadSelectedBoard()">Load Pattern</button>
+                </p>
+            </div>
+            <div id="show-hide-div" onclick="showHideControls()">
+                <p id="show-hide-button">
+                    <
+                </p>
+            </div>
+        </div>
         <script src="/js/board.js"></script>
+        <script src="/js/predefined-boards.js"></script>
         <script src="/js/main.js"></script>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" tabindex="0" autofocus></canvas>
     </body>
 </html>
