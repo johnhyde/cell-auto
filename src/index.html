@@ -1,36 +1,52 @@
+<!DOCTYPE HTML>
 <html>
     <head>
+        <title>Cellular Automata</title>
+        <meta charset="utf-8"  />
         <link rel="stylesheet" href="/styles.css" type="text/css">
     </head>
     <body>
         <div class="control-tray noselect">
             <div id= "buttons-div">
                 <p>
-                    <button onclick="startStopAutoplaying()">Start/Stop</button>
-                    <button onclick="step()">Next</button>
+                    <button onclick="startStopAutoplaying()" title="shortcut: [Space]">Start/Stop</button>
+                    <button onclick="step()" title="shortcut: [Right Arrow]">Next</button>
                 </p>
                 <p>
-                    <button onclick="speedUp()">Speed Up</button>
-                    <button onclick="speedDown()">Slow Down</button>
+                    <button onclick="speedUp()" title="shortcut: [Up Arrow]">Speed Up</button>
+                    <button onclick="speedDown()" title="shortcut: [Down Arrow]">Slow Down</button>
                 </p>
                 <p>
-                    <button onclick="scaleUp()">Zoom in</button>
-                    <button onclick="scaleDown()">Zoom Out</button>
+                    <button onclick="scaleUp()" title="shortcut: +">Zoom in</button>
+                    <button onclick="scaleDown()" title="shortcut: -">Zoom Out</button>
+                </p>
+                <p>
+                    <span title="shortcut: g">
+                        <input type="checkbox" id="show-grid" onchange="showHideGrid()"> Show Grid</input>
+                    </span>
+                    <span title="shortcut: x">
+                        <input type="checkbox" id="hex-grid" onchange="toggleHexGrid()"> Hex Grid</input>
+                    </span>
+                </p>
+                <p>
+                    Rule Set: <select id="rule-set-select">Select Rule Set</select>
                 </p>
                 <p>
                     <select id="board-select"></select>
                     <button onclick="loadSelectedBoard()">Load Pattern</button>
                 </p>
             </div>
-            <div id="show-hide-div" onclick="showHideControls()">
+            <div id="show-hide-div" onclick="showHideControls()" title="shortcut: h">
                 <p id="show-hide-button">
-                    <
+                    ◄
                 </p>
             </div>
         </div>
-        <script src="/js/board.js"></script>
-        <script src="/js/predefined-boards.js"></script>
-        <script src="/js/main.js"></script>
+        <script src="/js/board.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/js/rule-sets.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/js/predefined-boards.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/js/draw.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/js/main.js" type="text/javascript" charset="utf-8"></script>
         <canvas id="canvas" tabindex="0" autofocus></canvas>
     </body>
 </html>

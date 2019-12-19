@@ -1,6 +1,7 @@
 var canvas;
 var ctx;
 var boardSelect;
+var ruleSetSelect;
 
 var mouseState = {
   mouseDown: false,
@@ -11,14 +12,15 @@ var mouseState = {
 };
 
 var camera1 = {
-  scale: 5,
+  scale: 15,
   focus: {
     x: 0,
     y: 0,
   },
-  showGrid: false,
+  showGrid: true,
+  hexGrid: false,
 };
-var board1 = [];
+var board1 = {};
 
 var colorMappings = {
   // '-3': [0,0,0,255],
@@ -45,9 +47,9 @@ function getColorMappingStyle(key) {
   return `rgba(${color[0]},${color[1]},${color[2]},${color[3]})`;
 }
 
-var fillStyleMappings = {};
+var styleMappings = {};
 for (let key in colorMappings) {
-  fillStyleMappings[key] = getColorMappingStyle(key);
+  styleMappings[key] = getColorMappingStyle(key);
 }
 
 var player = {
@@ -70,7 +72,18 @@ window.onload = () => {
   canvas.addEventListener('mouseout', mouseOutListener);
   canvas.addEventListener('click', clickListener);
 
-  canvas.addEventListener('keyup', keyUpListener);
+  window.addEventListener('keyup', keyUpListener);
+
+  document.getElementById('show-grid').checked = camera1.showGrid;
+  document.getElementById('hex-grid').checked = camera1.hexGrid;
+
+  ruleSetSelect = document.getElementById('rule-set-select');
+  for (let ruleSetName in ruleSets) {
+    let option = document.createElement("option");
+    option.text = ruleSetName;
+    ruleSetSelect.add(option);
+  }
+  loadSelectedRuleSet();
 
   boardSelect = document.getElementById('board-select');
   for (let boardName in predefinedBoards) {
@@ -87,94 +100,8 @@ window.onresize = () => {
   refresh();
 };
 
-var drawing = false;
-var queueDraw = false;
 function refresh() {
-  if (drawing) {
-    queueDraw = true;
-  } else {
-    drawing = true;
-    setTimeout(draw, 0);
-  }
-}
-
-function draw() {
-  let startTime = +new Date();
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  // ctx.beginPath();
-  // ctx.moveTo(30, 96);
-  // ctx.lineTo(70, 66);
-  // ctx.lineTo(103, 76);
-  // ctx.lineTo(170, 15);
-  // ctx.stroke();
-  ctx.fillStyle=fillStyleMappings['background'];
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  renderBoardWithCamera(ctx, board1, camera1);
-  console.log(`draw() ran in ${+new Date() - startTime}ms`);
-  if (queueDraw) {
-    queueDraw = false;
-    setTimeout(draw, 0);
-  } else {
-    drawing = false;
-  }
-}
-
-function renderBoardWithCamera(ctx, board, camera) {
-  let incorrectSquares = [];
-  let squaresToDrawByStyle = {};
-  for (let style in fillStyleMappings) {
-    squaresToDrawByStyle[fillStyleMappings[style]] = [];
-  }
-  let [minX, minY] = convertPointFromScreenToBoard([0, 0], camera);
-  let [maxX, maxY] = convertPointFromScreenToBoard([canvas.width - 1, canvas.height - 1], camera);
-  let cameraOffsetX = Math.floor(canvas.width/2) - camera.focus.x;
-  let cameraOffsetY = Math.floor(canvas.height/2) - camera.focus.y;
-  for (let x in board) {
-    if (x >= minX && x <= maxX) {
-      let convertedX = x*camera.scale + cameraOffsetX;
-      // let convertedX = x + cameraOffsetX/camera.scale;
-      // Some of this column is in view!
-      for (let y in board[x]) {
-        if (y >= minY && y <= maxY) {
-          let convertedY = y*camera.scale + cameraOffsetY;
-          // let convertedY = y + cameraOffsetY/camera.scale;
-          let style = fillStyleMappings[board[x][y]] || fillStyleMappings['???'];
-          // squaresToDrawByStyle[style].push([x, y]);
-          squaresToDrawByStyle[style].push([convertedX, convertedY]);
-        }
-      }
-    }
-  }
-  for (let style in squaresToDrawByStyle) {
-    // ctx.scale(camera.scale, camera.scale);
-    ctx.fillStyle = style;
-    ctx.beginPath();
-    for (let pos of squaresToDrawByStyle[style]) {
-      ctx.rect(pos[0], pos[1], camera.scale, camera.scale);
-      // ctx.rect(pos[0], pos[1], 1, 1);
-    }
-    ctx.fill();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-  // ctx.setTransform(1, 0, 0, 1, 0, 0);
-  // console.log(`Found incorrect squares: ${incorrectSquares.join(', ')}`);
-}
-
-function pointFromScreenFallsOnBoardLine([x, y], camera) {
-  let remainderX = (x - Math.floor(canvas.width/2) + camera.focus.x)%camera.scale;
-  let remainderY = (y - Math.floor(canvas.height/2) + camera.focus.y)%camera.scale;
-  return remainderX*remainderY == 0 ; // only one of them needs to be zero
-}
-
-function convertPointFromScreenToBoard([x, y], camera) {
-  let boardX = Math.floor((x - Math.floor(canvas.width/2) + camera.focus.x)/camera.scale);
-  let boardY = Math.floor((y - Math.floor(canvas.height/2) + camera.focus.y)/camera.scale);
-  return [boardX, boardY];
-}
-
-function lengthOfVector([x, y]) {
-  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
+  refreshContext(ctx, board1, camera1);
 }
 
 function mouseDownListener(e) {
@@ -214,13 +141,18 @@ function mouseOutListener(e) {
 function clickListener(e) {
   if (logging.events) console.log('click');
   if (!mouseState.isDrag) {
-    let boardPoint = convertPointFromScreenToBoard([e.clientX, e.clientY], camera1);
-    let currentValue = getBoardValue(board1, boardPoint);
-    let newValue = 1;
+    let currentRuleSet = ruleSets[ruleSetSelect.value];
+    let minValue = Math.min(currentRuleSet.minValue || -Infinity, 0);
+    let maxValue = Math.max(currentRuleSet.maxValue || Infinity, 0);
+    let boardPoint = convertPointFromScreenToBoard(ctx, [e.clientX, e.clientY], camera1);
+    let increment = 1;
     if (e.shiftKey) {
-      newValue = -1;
+      increment = -1;
     }
-    incrementBoardValue(board1, boardPoint, newValue);
+    let newValue = incrementBoardValue(board1, boardPoint, increment);
+    if (newValue < minValue || newValue > maxValue) {
+      setBoardValue(board1, boardPoint, 0);
+    }
     refresh();
   }
   mouseState.isDrag = false;
@@ -230,7 +162,9 @@ function keyUpListener(e) {
   if (logging.events) console.log(`keyup code: ${e.keyCode} | ${e.key} | ${e.code}`);
   switch (e.key) {
     case ' ':
-      startStopAutoplaying();
+      if (canvas === document.activeElement) {
+        startStopAutoplaying();
+      }
       break;
     case 'ArrowRight':
       step();
@@ -247,6 +181,12 @@ function keyUpListener(e) {
     case '-':
       scaleDown();
       break;
+    case 'g':
+      showHideGrid();
+      break;
+    case 'h':
+      showHideControls();
+      break;
   }
 }
 
@@ -262,11 +202,19 @@ function startStopAutoplaying() {
 
 function step() {
   let startTime = +new Date();
-  board1 = getNextBoard(board1);
+  // board1 = getNextBoard(board1);
+  let currentRuleSet = ruleSets[ruleSetSelect.value];
+  board1 = currentRuleSet.step(board1);
+  let timeElapsedMs = +new Date() - startTime;
+  console.log(`generated new board in ${timeElapsedMs}ms`);
   if (player.playing) {
-    let timeLeftInInterval = Math.max(0, player.intervalMs - (+new Date() - startTime));;
+    let timeLeftInInterval = Math.max(0, player.intervalMs - timeElapsedMs);;
     console.log(`doing next step in ${timeLeftInInterval}ms`);
-    player.timeoutId = setTimeout(step, timeLeftInInterval);
+    if (timeLeftInInterval > 0) {
+      player.timeoutId = setTimeout(step, timeLeftInInterval);
+    } else {
+      window.requestAnimationFrame(step);
+    }
   }
   refresh();
 }
@@ -280,12 +228,20 @@ function speedDown() {
 }
 
 function scaleUp() {
+  let tempFocusX = camera1.focus.x / camera1.scale;
+  let tempFocusY = camera1.focus.y / camera1.scale;
   camera1.scale++;
+  camera1.focus.x = Math.round(tempFocusX * camera1.scale);
+  camera1.focus.y = Math.round(tempFocusY * camera1.scale);
   refresh();
 }
 
 function scaleDown() {
+  let tempFocusX = camera1.focus.x / camera1.scale;
+  let tempFocusY = camera1.focus.y / camera1.scale;
   camera1.scale = Math.max(1, camera1.scale - 1);
+  camera1.focus.x = Math.round(tempFocusX * camera1.scale);
+  camera1.focus.y = Math.round(tempFocusY * camera1.scale);
   refresh();
 }
 
@@ -293,8 +249,22 @@ function showHideControls() {
   let buttonsDiv = document.getElementById('buttons-div');
   let showHideButton = document.getElementById('show-hide-button');
   buttonsDiv.hidden = !buttonsDiv.hidden;
-  showHideButton.innerHTML = buttonsDiv.hidden ? '>' : '<';
+  showHideButton.innerHTML = buttonsDiv.hidden ? '►' : '◄';
 
+}
+
+function showHideGrid() {
+  camera1.showGrid = !camera1.showGrid;
+  refresh();
+}
+
+function toggleHexGrid() {
+  camera1.hexGrid = !camera1.hexGrid;
+  refresh();
+}
+
+function loadSelectedRuleSet() {
+  //
 }
 
 function loadSelectedBoard() {
