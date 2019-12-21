@@ -2,6 +2,8 @@ var canvas;
 var ctx;
 var boardSelect;
 var ruleSetSelect;
+var showGridCheckbox;
+var hexGridCheckbox;
 
 var mouseState = {
   mouseDown: false,
@@ -74,8 +76,11 @@ window.onload = () => {
 
   window.addEventListener('keyup', keyUpListener);
 
-  document.getElementById('show-grid').checked = camera1.showGrid;
-  document.getElementById('hex-grid').checked = camera1.hexGrid;
+  showGridCheckbox = document.getElementById('show-grid');
+  showGridCheckbox.checked = camera1.showGrid;
+
+  hexGridCheckbox = document.getElementById('hex-grid');
+  hexGridCheckbox.checked = camera1.hexGrid;
 
   ruleSetSelect = document.getElementById('rule-set-select');
   for (let ruleSetName in ruleSets) {
@@ -187,6 +192,9 @@ function keyUpListener(e) {
     case 'h':
       showHideControls();
       break;
+    case 'x':
+      toggleHexGrid();
+      break;
   }
 }
 
@@ -255,11 +263,13 @@ function showHideControls() {
 
 function showHideGrid() {
   camera1.showGrid = !camera1.showGrid;
+  showGridCheckbox.checked = camera1.showGrid;
   refresh();
 }
 
 function toggleHexGrid() {
   camera1.hexGrid = !camera1.hexGrid;
+  hexGridCheckbox.checked = camera1.hexGrid;
   refresh();
 }
 

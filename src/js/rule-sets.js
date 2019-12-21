@@ -11,6 +11,12 @@ var ruleSets = {
     hex: false,
     step: conwayStep,
   },
+  'Hex Game of Life': {
+    minValue: 0,
+    maxValue: 1,
+    hex: false,
+    step: hexConwayStep,
+  },
 };
 
 function unnamed1Step(board) {
@@ -148,6 +154,34 @@ function conwayStep(board) {
   for (let x in neighborCountBoard) {
     for (let y in neighborCountBoard[x]) {
       if (neighborCountBoard[x][y] === 3 || (neighborCountBoard[x][y] === 2 && getBoardValue(board, [x, y]) === 1)) {
+        setBoardValue(newBoard, [x, y], 1);
+      }
+    }
+  }
+  return newBoard;
+}
+
+function hexConwayStep(board) {
+  let neighborCountBoard = {};
+  let newBoard = {};
+  for (let x in board) {
+    x = Number(x);
+    for (let y in board[x]) {
+      y = Number(y);
+      // console.log(board[x][y]);
+      if (board[x][y] === 1) {
+        incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1);
+        incrementBoardValue(neighborCountBoard, [x + 1, y - 1], 1);
+        incrementBoardValue(neighborCountBoard, [x    , y - 1], 1);
+        incrementBoardValue(neighborCountBoard, [x - 1, y    ], 1);
+        incrementBoardValue(neighborCountBoard, [x - 1, y + 1], 1);
+        incrementBoardValue(neighborCountBoard, [x    , y + 1], 1);
+      }
+    }
+  }
+  for (let x in neighborCountBoard) {
+    for (let y in neighborCountBoard[x]) {
+      if (neighborCountBoard[x][y] === 3 || (neighborCountBoard[x][y] === 2 /*&& getBoardValue(board, [x, y]) === 1*/)) {
         setBoardValue(newBoard, [x, y], 1);
       }
     }
