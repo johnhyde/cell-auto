@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - run: ls -al
+    - name: FTP Deploy
+      uses: SamKirkland/FTP-Deploy-Action@2.0.0
+      env:
+        FTP_SERVER: ftp.warkgnall.com
+        FTP_USERNAME: warkgna1
+        FTP_PASSWORD: T45d0baK9a
+        LOCAL_DIR: src
+        REMOTE_DIR: public_html/games/cell-auto
+        ARGS: --exclude-glob=.git*/** --exclude-glob=.git** --ignore-time
