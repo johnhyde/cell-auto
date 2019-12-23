@@ -216,7 +216,7 @@ function step() {
   let timeElapsedMs = +new Date() - startTime;
   console.log(`generated new board in ${timeElapsedMs}ms`);
   if (player.playing) {
-    let timeLeftInInterval = Math.max(0, player.intervalMs - timeElapsedMs);;
+    let timeLeftInInterval = Math.max(5, player.intervalMs - timeElapsedMs);;
     console.log(`doing next step in ${timeLeftInInterval}ms`);
     if (timeLeftInInterval > 0) {
       player.timeoutId = setTimeout(step, timeLeftInInterval);

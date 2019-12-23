@@ -10,7 +10,7 @@ function refreshContext(ctx, board, camera) {
     queueDraw = true;
   } else {
     drawing = true;
-    window.requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       draw(ctx, board, camera);
     });
   }
@@ -27,7 +27,7 @@ function draw(ctx, board, camera) {
   console.log(`draw() ran in ${+new Date() - startTime}ms`);
   if (queueDraw) {
     queueDraw = false;
-    window.requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       draw(ctx, board, camera);
     });
   } else {
@@ -78,7 +78,6 @@ function renderBoardWithCamera(ctx, board, camera) {
         ctx.lineTo(x, y - hexRadius);
         ctx.lineTo(x - .5, y - hexHalfSideLength);
         ctx.lineTo(x - .5, y + hexHalfSideLength);
-        ctx.fill();
       } else {
         ctx.rect(pos[0], pos[1], 1, 1);
       }
