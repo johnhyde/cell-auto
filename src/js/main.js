@@ -13,6 +13,13 @@ var mouseState = {
   isDrag: false,
 };
 
+var player = {
+  playing: false,
+  timeoutId: 0,
+  intervalMs: 100,
+}
+var speedScalingFactor = .8;
+
 var camera1 = {
   scale: 15,
   focus: {
@@ -22,6 +29,8 @@ var camera1 = {
   showGrid: true,
   hexGrid: false,
 };
+var scaleScalingFactor = 1.2;
+
 var board1 = {};
 
 var colorMappings = {
@@ -54,12 +63,6 @@ for (let key in colorMappings) {
   styleMappings[key] = getColorMappingStyle(key);
 }
 
-var player = {
-  playing: false,
-  timeoutId: 0,
-  intervalMs: 100,
-}
-
 var logging = {
   events: false,
 };
@@ -69,12 +72,19 @@ window.onload = () => {
   ctx = canvas.getContext('2d', { alpha: false });
 
   canvas.addEventListener('mousedown', mouseDownListener);
+  canvas.addEventListener('touchstart', mouseDownListener);
   canvas.addEventListener('mousemove', mouseMoveListener);
+  canvas.addEventListener('touchmove  ', mouseMoveListener);
   canvas.addEventListener('mouseup', mouseUpListener);
+  canvas.addEventListener('touchend', mouseUpListener);
   canvas.addEventListener('mouseout', mouseOutListener);
+  canvas.addEventListener('touchcancel', mouseOutListener);
   canvas.addEventListener('click', clickListener);
+  canvas.addEventListener('wheel', wheelListener);
 
   window.addEventListener('keyup', keyUpListener);
+  window.addEventListener('resize', refresh);
+
 
   showGridCheckbox = document.getElementById('show-grid');
   showGridCheckbox.checked = camera1.showGrid;
@@ -98,10 +108,6 @@ window.onload = () => {
   }
 
   // fakeSetup();
-  refresh();
-};
-
-window.onresize = () => {
   refresh();
 };
 
@@ -163,10 +169,18 @@ function clickListener(e) {
   mouseState.isDrag = false;
 }
 
+function wheelListener(e) {
+  if (logging.events) console.log('wheel');
+  camera1.focus.x -= Math.floor(e.deltaX/2);
+  camera1.focus.y += Math.floor(e.deltaY/2);
+  refresh();
+}
+
 function keyUpListener(e) {
   if (logging.events) console.log(`keyup code: ${e.keyCode} | ${e.key} | ${e.code}`);
   switch (e.key) {
     case ' ':
+    case 's':
       if (canvas === document.activeElement) {
         startStopAutoplaying();
       }
@@ -189,11 +203,17 @@ function keyUpListener(e) {
     case 'g':
       showHideGrid();
       break;
+    case 'x':
+      toggleHexGrid();
+      break;
     case 'h':
       showHideControls();
       break;
-    case 'x':
-      toggleHexGrid();
+    case 'm':
+      showHideMore();
+      break;
+    case 'f':
+      fillAreaRandomFromInput();
       break;
   }
 }
@@ -228,17 +248,17 @@ function step() {
 }
 
 function speedUp() {
-  player.intervalMs *= .8;
+  player.intervalMs *= speedScalingFactor;
 }
 
 function speedDown() {
-  player.intervalMs /= .8;
+  player.intervalMs /= speedScalingFactor;
 }
 
 function scaleUp() {
   let tempFocusX = camera1.focus.x / camera1.scale;
   let tempFocusY = camera1.focus.y / camera1.scale;
-  camera1.scale++;
+  camera1.scale = Math.ceil(camera1.scale * scaleScalingFactor);
   camera1.focus.x = Math.round(tempFocusX * camera1.scale);
   camera1.focus.y = Math.round(tempFocusY * camera1.scale);
   refresh();
@@ -247,7 +267,7 @@ function scaleUp() {
 function scaleDown() {
   let tempFocusX = camera1.focus.x / camera1.scale;
   let tempFocusY = camera1.focus.y / camera1.scale;
-  camera1.scale = Math.max(1, camera1.scale - 1);
+  camera1.scale = Math.max(1, Math.floor(camera1.scale / scaleScalingFactor));
   camera1.focus.x = Math.round(tempFocusX * camera1.scale);
   camera1.focus.y = Math.round(tempFocusY * camera1.scale);
   refresh();
@@ -255,10 +275,27 @@ function scaleDown() {
 
 function showHideControls() {
   let buttonsDiv = document.getElementById('buttons-div');
-  let showHideButton = document.getElementById('show-hide-button');
+  let showHideControlsButton = document.getElementById('show-hide-controls-button');
   buttonsDiv.hidden = !buttonsDiv.hidden;
-  showHideButton.innerHTML = buttonsDiv.hidden ? '►' : '◄';
+  showHideControlsButton.innerHTML = buttonsDiv.hidden ? '►' : '◄';
 
+}
+
+function showHideMore() {
+  let moreControlsDiv = document.getElementById('more-controls-div');
+  let showHideControlsButton = document.getElementById('show-hide-more-button');
+  moreControlsDiv.hidden = !moreControlsDiv.hidden;
+  showHideControlsButton.innerHTML = moreControlsDiv.hidden ? '▼' : '▲';
+}
+
+function fillAreaRandomFromInput() {
+  let dimensionInput = document.getElementById('fill-area-dim');
+  let densityInput = document.getElementById('fill-area-density');
+  let dim = dimensionInput.value;
+  let density = densityInput.value/100;
+  let { minValue, maxValue } = ruleSets[ruleSetSelect.value];
+  fillAreaRandom(board1, dim, density, minValue, maxValue);
+  refresh();
 }
 
 function showHideGrid() {
@@ -284,18 +321,5 @@ function loadSelectedBoard() {
   if (selectedBoard) {
     board1 = JSON.parse(JSON.stringify(selectedBoard));
     refresh();
-  }
-}
-
-function fakeSetup() {
-  setBoardValue(board1, [0, 0], -1);
-  setBoardValue(board1, [1, 1], 1);
-  setBoardValue(board1, [3, -2], 1);
-  setBoardValue(board1, [-3, -3], 1);
-  setBoardValue(board1, [-4, 4], 1);
-  let dim = 30;
-  let density = 1/3;
-  for (let i = 0; i < dim*dim*density; i++) {
-    setBoardValue(board1, [Math.floor(Math.random()*dim-dim/2), Math.floor(Math.random()*dim-dim/2)], Math.floor(Math.random()*7)-3);
   }
 }

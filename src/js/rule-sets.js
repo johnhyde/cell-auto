@@ -170,18 +170,22 @@ function hexConwayStep(board) {
       y = Number(y);
       // console.log(board[x][y]);
       if (board[x][y] === 1) {
-        incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1);
+        incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1.5);
         incrementBoardValue(neighborCountBoard, [x + 1, y - 1], 1);
-        incrementBoardValue(neighborCountBoard, [x    , y - 1], 1);
+        incrementBoardValue(neighborCountBoard, [x    , y - 1], 1.5);
         incrementBoardValue(neighborCountBoard, [x - 1, y    ], 1);
-        incrementBoardValue(neighborCountBoard, [x - 1, y + 1], 1);
+        incrementBoardValue(neighborCountBoard, [x - 1, y + 1], 1.5);
         incrementBoardValue(neighborCountBoard, [x    , y + 1], 1);
       }
     }
   }
   for (let x in neighborCountBoard) {
     for (let y in neighborCountBoard[x]) {
-      if (neighborCountBoard[x][y] === 3 || (neighborCountBoard[x][y] === 2 /*&& getBoardValue(board, [x, y]) === 1*/)) {
+      // let neighborValue = Math.ceil(neighborCountBoard[x][y]);
+      let neighborValue = neighborCountBoard[x][y];
+      // if (neighborValue === 3 || (neighborValue === 2 && getBoardValue(board, [x, y]) === 1)) {
+      // if (neighborValue === 3 || (neighborValue === 2.5 && getBoardValue(board, [x, y]) === 1)) {
+      if (neighborValue < 3.5 && neighborValue > 2 ||  (neighborValue === 2 && getBoardValue(board, [x, y]) === 1)) {
         setBoardValue(newBoard, [x, y], 1);
       }
     }

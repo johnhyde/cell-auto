@@ -2,14 +2,15 @@
 <html>
     <head>
         <title>Cellular Automata</title>
-        <meta charset="utf-8"  />
+        <meta charset="utf-8"/>
         <link rel="stylesheet" href="styles.css" type="text/css">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     </head>
     <body>
         <div class="control-tray noselect">
             <div id= "buttons-div">
                 <p>
-                    <button onclick="startStopAutoplaying()" title="shortcut: [Space]">Start/Stop</button>
+                    <button onclick="startStopAutoplaying()" title="shortcut: [Space] or s">Start/Stop</button>
                     <button onclick="step()" title="shortcut: [Right Arrow]">Next</button>
                 </p>
                 <p>
@@ -35,9 +36,31 @@
                     <select id="board-select"></select>
                     <button onclick="loadSelectedBoard()">Load Pattern</button>
                 </p>
+                <p>
+                    More Controls
+                    <span id="show-hide-more-button"
+                        class="show-hide-button"
+                        onclick="showHideMore()"
+                        title="shortcut: m">
+                        ▲
+                    </span>
+                </p>
+                <div id="more-controls-div">
+                    <p>
+                        <button onclick="fillAreaRandomFromInput()" title="shortcut: f">Fill Area</button>
+                    </p>
+                    <p>
+                        Width and Height <input type=number id="fill-area-dim" value="50">
+                    </p>
+                    <p>
+                        Density <input type=number id="fill-area-density" value="50">%
+                    </p>
+                    <span class="controls-separator"></span>
+                    </p>
+                </div>
             </div>
-            <div id="show-hide-div" onclick="showHideControls()" title="shortcut: h">
-                <p id="show-hide-button">
+            <div class="show-hide-div" onclick="showHideControls()" title="shortcut: h">
+                <p id="show-hide-controls-button" class="show-hide-button">
                     ◄
                 </p>
             </div>

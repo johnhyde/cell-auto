@@ -94,3 +94,13 @@ function combineBoards(boards) {
   }
   return newBoard;
 }
+
+function fillAreaRandom(board, dim, density, minValue, maxValue) {
+  let numberRange = maxValue - minValue + 1;
+  for (let i = 0; i < dim*dim*density; i++) {
+    let randomX = Math.floor(Math.random()*dim-dim/2);
+    let randomY = Math.floor(Math.random()*dim-dim/2);
+    let randomValue = Math.floor(Math.random()*numberRange) + minValue;
+    setBoardValue(board, [randomX, randomY], randomValue);
+  }
+}

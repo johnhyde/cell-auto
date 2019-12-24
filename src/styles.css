@@ -11,9 +11,9 @@ body {
   display: flex;
 }
 
-#buttons-div, #show-hide-button {
+#buttons-div, #show-hide-controls-button {
   pointer-events: all;
-  background-color: rgba(255,255,255,.5);
+  background-color: rgba(255,255,255,.6);
 }
 
 #buttons-div {
@@ -24,17 +24,20 @@ body {
   margin: 10px;
 }
 
-#show-hide-div {
+.show-hide-div {
   height: 100%;
 }
 
-#show-hide-button {
+#show-hide-controls-button {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.show-hide-button {
   cursor: pointer;
   margin: 0;
   padding: 5px;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  color: white;
+  color: rgba(0,0,0,.8);
 }
 
 
@@ -52,6 +55,15 @@ button, .checkbox {
 
 button:hover {
   background-color: #eee;
+}
+
+input[type=number] {
+  width: 50px;
+}
+
+#more-controls-div {
+  border: 1px solid rgba(0,0,0,.8);
+  margin: 5px;
 }
 
 .noselect {
