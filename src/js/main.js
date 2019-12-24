@@ -180,10 +180,12 @@ function keyUpListener(e) {
   if (logging.events) console.log(`keyup code: ${e.keyCode} | ${e.key} | ${e.code}`);
   switch (e.key) {
     case ' ':
-    case 's':
       if (canvas === document.activeElement) {
         startStopAutoplaying();
       }
+      break;
+    case 's':
+      startStopAutoplaying();
       break;
     case 'ArrowRight':
       step();
