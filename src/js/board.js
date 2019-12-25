@@ -97,10 +97,20 @@ function combineBoards(boards) {
 
 function fillAreaRandom(board, dim, density, minValue, maxValue) {
   let numberRange = maxValue - minValue + 1;
-  for (let i = 0; i < dim*dim*density; i++) {
-    let randomX = Math.floor(Math.random()*dim-dim/2);
-    let randomY = Math.floor(Math.random()*dim-dim/2);
-    let randomValue = Math.floor(Math.random()*numberRange) + minValue;
-    setBoardValue(board, [randomX, randomY], randomValue);
+  for (let x = Math.floor(-dim/2); x < dim/2; x++) {
+    for (let y = Math.floor(-dim/2); y < dim/2; y++) {
+      if (Math.random() < density) {
+        let randomValue = 0;
+        for (let i = 0; i < 5 && randomValue === 0; i++) {
+          randomValue = Math.floor(Math.random()*numberRange) + minValue;
+        }
+        setBoardValue(board, [x, y], randomValue);
+      }
+    }
   }
+  // for (let i = 0; i < dim*dim*density; i++) {
+  //   let randomX = Math.floor(Math.random()*dim-dim/2);
+  //   let randomY = Math.floor(Math.random()*dim-dim/2);
+  //   setBoardValue(board, [randomX, randomY], randomValue);
+  // }
 }
