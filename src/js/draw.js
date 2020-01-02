@@ -89,7 +89,7 @@ function renderBoardWithCamera(ctx, board, camera) {
   if (camera.showGrid) {
     if (!camera.hexGrid && camera.scale > 1) {
       drawCartGrid(ctx, camera);
-    } else if (camera.hexGrid && camera.scale > 6) {
+    } else if (camera.hexGrid && camera.scale > 4) {
       drawHexGrid(ctx, camera);
     }
   }

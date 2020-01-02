@@ -26,12 +26,13 @@ s.player = {
   baseIntervalMs: 2000,
   index: 10,
   minIndex: 0,
-  maxIndex: 21,
+  maxIndex: 22,
   get intervalMs() {
-    return this.baseIntervalMs * Math.pow(speedScalingFactor, this.index);
+    return Math.max(1000/60 + 5, this.baseIntervalMs * Math.pow(speedScalingFactor, this.index));
   }
 }
-var speedScalingFactor = .75;
+var speedScalingFactor = .8;
+var boardHistoryLimit = 80;
 
 s.currentCamera = {
   scale: 15,
@@ -245,20 +246,16 @@ function startStopAutoplaying() {
 function step() {
   let startTime = +new Date();
   boardHistory.push(currentBoard);
-  if (boardHistory.length > 50) {
-    boardHistory = boardHistory.slice(boardHistory.length - 50);
+  if (boardHistory.length > boardHistoryLimit) {
+    boardHistory = boardHistory.slice(boardHistory.length - boardHistoryLimit);
   }
   currentBoard = currentRuleSet.step(currentBoard);
   let timeElapsedMs = +new Date() - startTime;
   console.log(`generated new board in ${timeElapsedMs}ms`);
   if (s.player.playing) {
-    let timeLeftInInterval = Math.max(5, s.player.intervalMs - timeElapsedMs);;
+    let timeLeftInInterval = Math.max(0, s.player.intervalMs - timeElapsedMs);;
     console.log(`doing next step in ${timeLeftInInterval}ms`);
-    if (timeLeftInInterval > 0) {
-      s.player.timeoutId = setTimeout(step, timeLeftInInterval);
-    } else {
-      window.requestAnimationFrame(step);
-    }
+    s.player.timeoutId = setTimeout(step, timeLeftInInterval);
   }
   refresh();
 }
