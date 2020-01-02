@@ -17,6 +17,18 @@ var ruleSets = {
     hex: false,
     step: hexConwayStep,
   },
+  'Hex Game of Life V2': {
+    minValue: 0,
+    maxValue: 1,
+    hex: false,
+    step: hexConwayV2Step,
+  },
+  'Hex Game of Life V3': {
+    minValue: 0,
+    maxValue: 1,
+    hex: false,
+    step: hexConwayV3Step,
+  },
 };
 
 function unnamed1Step(board) {
@@ -168,7 +180,6 @@ function hexConwayStep(board) {
     x = Number(x);
     for (let y in board[x]) {
       y = Number(y);
-      // console.log(board[x][y]);
       if (board[x][y] === 1) {
         incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1.5);
         incrementBoardValue(neighborCountBoard, [x + 1, y - 1], 1);
@@ -181,11 +192,64 @@ function hexConwayStep(board) {
   }
   for (let x in neighborCountBoard) {
     for (let y in neighborCountBoard[x]) {
-      // let neighborValue = Math.ceil(neighborCountBoard[x][y]);
       let neighborValue = neighborCountBoard[x][y];
-      // if (neighborValue === 3 || (neighborValue === 2 && getBoardValue(board, [x, y]) === 1)) {
-      // if (neighborValue === 3 || (neighborValue === 2.5 && getBoardValue(board, [x, y]) === 1)) {
       if (neighborValue < 3.5 && neighborValue > 2 ||  (neighborValue === 2 && getBoardValue(board, [x, y]) === 1)) {
+        setBoardValue(newBoard, [x, y], 1);
+      }
+    }
+  }
+  return newBoard;
+}
+
+function hexConwayV2Step(board) {
+  let neighborCountBoard = {};
+  let newBoard = {};
+  for (let x in board) {
+    x = Number(x);
+    for (let y in board[x]) {
+      y = Number(y);
+      if (board[x][y] === 1) {
+        incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1.5);
+        incrementBoardValue(neighborCountBoard, [x + 1, y - 1], 1);
+        incrementBoardValue(neighborCountBoard, [x    , y - 1], 1.5);
+        incrementBoardValue(neighborCountBoard, [x - 1, y    ], 1);
+        incrementBoardValue(neighborCountBoard, [x - 1, y + 1], 1.5);
+        incrementBoardValue(neighborCountBoard, [x    , y + 1], 1);
+      }
+    }
+  }
+  for (let x in neighborCountBoard) {
+    for (let y in neighborCountBoard[x]) {
+      let neighborValue = neighborCountBoard[x][y];
+      if (neighborValue < 3 && neighborValue > 2 ||  ((neighborValue === 2 || neighborValue === 3 || neighborValue === 3.5) && getBoardValue(board, [x, y]) === 1)) {
+        setBoardValue(newBoard, [x, y], 1);
+      }
+    }
+  }
+  return newBoard;
+}
+
+function hexConwayV3Step(board) {
+  let neighborCountBoard = {};
+  let newBoard = {};
+  for (let x in board) {
+    x = Number(x);
+    for (let y in board[x]) {
+      y = Number(y);
+      if (board[x][y] === 1) {
+        incrementBoardValue(neighborCountBoard, [x + 1, y    ], 1.5);
+        incrementBoardValue(neighborCountBoard, [x + 1, y - 1], 1);
+        incrementBoardValue(neighborCountBoard, [x    , y - 1], 1.5);
+        incrementBoardValue(neighborCountBoard, [x - 1, y    ], 1);
+        incrementBoardValue(neighborCountBoard, [x - 1, y + 1], 1.5);
+        incrementBoardValue(neighborCountBoard, [x    , y + 1], 1);
+      }
+    }
+  }
+  for (let x in neighborCountBoard) {
+    for (let y in neighborCountBoard[x]) {
+      let neighborValue = neighborCountBoard[x][y];
+      if (neighborValue < 3 && neighborValue > 2 ||  ((neighborValue === 2 || neighborValue === 3.5) && getBoardValue(board, [x, y]) === 1)) {
         setBoardValue(newBoard, [x, y], 1);
       }
     }

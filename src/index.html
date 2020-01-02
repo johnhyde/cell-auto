@@ -3,19 +3,32 @@
     <head>
         <title>Cellular Automata</title>
         <meta charset="utf-8"/>
-        <link rel="stylesheet" href="styles.css" type="text/css">
+        <link rel="stylesheet" href="css/styles.css" type="text/css">
+        <link rel="stylesheet" href="css/font-awesome.css" crossorigin="anonymous">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/rivets/0.9.4/rivets.bundled.min.js"></script>
+        <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/rule-sets.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/predefined-boards.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/draw.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/main.js" type="text/javascript" charset="utf-8"></script>
     </head>
     <body>
-        <div class="control-tray noselect">
-            <div id= "buttons-div">
+        <div id="control-tray" class="noselect">
+            <div id="buttons-div" rv-show="showControls">
                 <p>
-                    <button onclick="startStopAutoplaying()" title="shortcut: [Space] or s">Start/Stop</button>
-                    <button onclick="step()" title="shortcut: [Right Arrow]">Next</button>
+                    <i class="fas fa-step-backward" onclick="stepBackward()" title="shortcut: [Left Arrow]"></i>
+                    <span onclick="startStopAutoplaying()" title="shortcut: [Space] or s">
+                        <i class="fas fa-play" rv-hide="player.playing"></i>
+                        <span id="stop-playing"><i class="fas fa-stop" rv-show="player.playing"></i></span>
+                    </span>
+                    <i class="fas fa-step-forward" onclick="step()" title="shortcut: [Right Arrow]"></i>
                 </p>
-                <p>
-                    <button onclick="speedUp()" title="shortcut: [Up Arrow]">Speed Up</button>
-                    <button onclick="speedDown()" title="shortcut: [Down Arrow]">Slow Down</button>
+                <p class="icon-spacer">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-angle-left" onclick="speedDown()" title="shortcut: [Down Arrow]"></i>
+                    <input type="range" rv-min="player.minIndex" rv-max="player.maxIndex" rv-value="player.index">
+                    <i class="fas fa-angle-right" onclick="speedUp()" title="shortcut: [Up Arrow]"></i>
                 </p>
                 <p>
                     <button onclick="scaleUp()" title="shortcut: +">Zoom in</button>
@@ -23,14 +36,14 @@
                 </p>
                 <p>
                     <span title="shortcut: g">
-                        <input type="checkbox" id="show-grid" onchange="showHideGrid()"> Show Grid</input>
+                        <input type="checkbox" id="show-grid" rv-checked="currentCamera.showGrid" onchange="refresh()"> Show Grid</input>
                     </span>
                     <span title="shortcut: x">
-                        <input type="checkbox" id="hex-grid" onchange="toggleHexGrid()"> Hex Grid</input>
+                        <input type="checkbox" id="hex-grid" rv-checked="currentCamera.hexGrid" onchange="refresh()"> Hex Grid</input>
                     </span>
                 </p>
                 <p>
-                    Rule Set: <select id="rule-set-select">Select Rule Set</select>
+                    Rule Set: <select id="rule-set-select" onchange="loadSelectedRuleSet()"></select>
                 </p>
                 <p>
                     <select id="board-select"></select>
@@ -42,18 +55,19 @@
                         class="show-hide-button"
                         onclick="showHideMore()"
                         title="shortcut: m">
-                        ▲
+                        <i class="fas fa-angle-up" rv-show="showMore"></i>
+                        <i class="fas fa-angle-down" rv-hide="showMore"></i>
                     </span>
                 </p>
-                <div id="more-controls-div">
+                <div id="more-controls-div" rv-show="showMore">
                     <p>
                         <button onclick="fillAreaRandomFromInput()" title="shortcut: f">Fill Area</button>
                     </p>
                     <p>
-                        Width and Height <input type=number id="fill-area-dim" value="50">
+                        Width and Height <input type=number rv-value="fillAreaDim">
                     </p>
                     <p>
-                        Density <input type=number id="fill-area-density" value="50">%
+                        Density <input type=number rv-value="fillAreaDensity">%
                     </p>
                     <span class="controls-separator"></span>
                     </p>
@@ -61,15 +75,11 @@
             </div>
             <div class="show-hide-div" onclick="showHideControls()" title="shortcut: h">
                 <p id="show-hide-controls-button" class="show-hide-button">
-                    ◄
+                    <i class="fas fa-angle-left" rv-show="showControls"></i>
+                    <i class="fas fa-angle-right" rv-hide="showControls"></i>
                 </p>
             </div>
         </div>
-        <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/rule-sets.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/predefined-boards.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/draw.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/main.js" type="text/javascript" charset="utf-8"></script>
         <canvas id="canvas" tabindex="0" autofocus></canvas>
     </body>
 </html>

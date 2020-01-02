@@ -2,8 +2,7 @@ var canvas;
 var ctx;
 var boardSelect;
 var ruleSetSelect;
-var showGridCheckbox;
-var hexGridCheckbox;
+var currentRuleSet;
 
 var mouseState = {
   mouseDown: false,
@@ -13,14 +12,27 @@ var mouseState = {
   isDrag: false,
 };
 
-var player = {
+var s = { // scope (for ui)
+  showControls: true,
+  showMore: true,
+  fillAreaDim: 50,
+  fillAreaDensity: 50,
+};
+
+s.player = {
   playing: false,
   timeoutId: 0,
-  intervalMs: 100,
+  baseIntervalMs: 2000,
+  index: 10,
+  minIndex: 0,
+  maxIndex: 21,
+  get intervalMs() {
+    return this.baseIntervalMs * Math.pow(speedScalingFactor, this.index);
+  }
 }
-var speedScalingFactor = .8;
+var speedScalingFactor = .75;
 
-var camera1 = {
+s.currentCamera = {
   scale: 15,
   focus: {
     x: 0,
@@ -31,7 +43,8 @@ var camera1 = {
 };
 var scaleScalingFactor = 1.2;
 
-var board1 = {};
+var currentBoard = {};
+var boardHistory = [];
 
 var colorMappings = {
   // '-3': [0,0,0,255],
@@ -85,13 +98,9 @@ window.onload = () => {
   window.addEventListener('keyup', keyUpListener);
   window.addEventListener('resize', refresh);
 
+  rivets.bind(document.body, s);
 
-  showGridCheckbox = document.getElementById('show-grid');
-  showGridCheckbox.checked = camera1.showGrid;
-
-  hexGridCheckbox = document.getElementById('hex-grid');
-  hexGridCheckbox.checked = camera1.hexGrid;
-
+  s.ruleSets = ruleSets;
   ruleSetSelect = document.getElementById('rule-set-select');
   for (let ruleSetName in ruleSets) {
     let option = document.createElement("option");
@@ -112,7 +121,7 @@ window.onload = () => {
 };
 
 function refresh() {
-  refreshContext(ctx, board1, camera1);
+  refreshContext(ctx, currentBoard, s.currentCamera);
 }
 
 function mouseDownListener(e) {
@@ -130,8 +139,8 @@ function mouseMoveListener(e) {
   }
   if (mouseState.isDrag || lengthOfVector(mouseState.delta) >= mouseState.minDeltaLength) {
     mouseState.isDrag = true; // in case it wasn't already
-    camera1.focus.x -= mouseState.delta[0];
-    camera1.focus.y -= mouseState.delta[1];
+    s.currentCamera.focus.x -= mouseState.delta[0];
+    s.currentCamera.focus.y -= mouseState.delta[1];
     mouseState.delta = [0, 0];
     refresh();
   }
@@ -152,17 +161,16 @@ function mouseOutListener(e) {
 function clickListener(e) {
   if (logging.events) console.log('click');
   if (!mouseState.isDrag) {
-    let currentRuleSet = ruleSets[ruleSetSelect.value];
     let minValue = Math.min(currentRuleSet.minValue || -Infinity, 0);
     let maxValue = Math.max(currentRuleSet.maxValue || Infinity, 0);
-    let boardPoint = convertPointFromScreenToBoard(ctx, [e.clientX, e.clientY], camera1);
+    let boardPoint = convertPointFromScreenToBoard(ctx, [e.clientX, e.clientY], s.currentCamera);
     let increment = 1;
     if (e.shiftKey) {
       increment = -1;
     }
-    let newValue = incrementBoardValue(board1, boardPoint, increment);
+    let newValue = incrementBoardValue(currentBoard, boardPoint, increment);
     if (newValue < minValue || newValue > maxValue) {
-      setBoardValue(board1, boardPoint, 0);
+      setBoardValue(currentBoard, boardPoint, 0);
     }
     refresh();
   }
@@ -171,8 +179,8 @@ function clickListener(e) {
 
 function wheelListener(e) {
   if (logging.events) console.log('wheel');
-  camera1.focus.x += Math.floor(e.deltaX/2);
-  camera1.focus.y += Math.floor(e.deltaY/2);
+  s.currentCamera.focus.x += Math.floor(e.deltaX/2);
+  s.currentCamera.focus.y += Math.floor(e.deltaY/2);
   refresh();
 }
 
@@ -189,6 +197,9 @@ function keyUpListener(e) {
       break;
     case 'ArrowRight':
       step();
+      break;
+    case 'ArrowLeft':
+      stepBackward();
       break;
     case 'ArrowUp':
       speedUp()
@@ -221,27 +232,29 @@ function keyUpListener(e) {
 }
 
 function startStopAutoplaying() {
-  if (player.playing) {
-    player.playing = false;
-    clearTimeout(player.timeoutId);
+  if (s.player.playing) {
+    s.player.playing = false;
+    clearTimeout(s.player.timeoutId);
   } else {
-    player.playing = true;
+    s.player.playing = true;
     step();
   }
 }
 
 function step() {
   let startTime = +new Date();
-  // board1 = getNextBoard(board1);
-  let currentRuleSet = ruleSets[ruleSetSelect.value];
-  board1 = currentRuleSet.step(board1);
+  boardHistory.push(currentBoard);
+  if (boardHistory.length > 50) {
+    boardHistory = boardHistory.slice(boardHistory.length - 50);
+  }
+  currentBoard = currentRuleSet.step(currentBoard);
   let timeElapsedMs = +new Date() - startTime;
   console.log(`generated new board in ${timeElapsedMs}ms`);
-  if (player.playing) {
-    let timeLeftInInterval = Math.max(5, player.intervalMs - timeElapsedMs);;
+  if (s.player.playing) {
+    let timeLeftInInterval = Math.max(5, s.player.intervalMs - timeElapsedMs);;
     console.log(`doing next step in ${timeLeftInInterval}ms`);
     if (timeLeftInInterval > 0) {
-      player.timeoutId = setTimeout(step, timeLeftInInterval);
+      s.player.timeoutId = setTimeout(step, timeLeftInInterval);
     } else {
       window.requestAnimationFrame(step);
     }
@@ -249,71 +262,68 @@ function step() {
   refresh();
 }
 
+function stepBackward() {
+  if (boardHistory.length > 0) {
+    currentBoard = boardHistory.pop();
+    refresh();
+  }
+}
+
 function speedUp() {
-  player.intervalMs *= speedScalingFactor;
+  s.player.index++;
+  s.player.index = Math.min(s.player.index, s.player.maxIndex);
 }
 
 function speedDown() {
-  player.intervalMs /= speedScalingFactor;
+  s.player.index--;
+  s.player.index = Math.max(s.player.index, s.player.minIndex);
 }
 
 function scaleUp() {
-  let tempFocusX = camera1.focus.x / camera1.scale;
-  let tempFocusY = camera1.focus.y / camera1.scale;
-  camera1.scale = Math.ceil(camera1.scale * scaleScalingFactor);
-  camera1.focus.x = Math.round(tempFocusX * camera1.scale);
-  camera1.focus.y = Math.round(tempFocusY * camera1.scale);
+  let tempFocusX = s.currentCamera.focus.x / s.currentCamera.scale;
+  let tempFocusY = s.currentCamera.focus.y / s.currentCamera.scale;
+  s.currentCamera.scale = Math.ceil(s.currentCamera.scale * scaleScalingFactor);
+  s.currentCamera.focus.x = Math.round(tempFocusX * s.currentCamera.scale);
+  s.currentCamera.focus.y = Math.round(tempFocusY * s.currentCamera.scale);
   refresh();
 }
 
 function scaleDown() {
-  let tempFocusX = camera1.focus.x / camera1.scale;
-  let tempFocusY = camera1.focus.y / camera1.scale;
-  camera1.scale = Math.max(1, Math.floor(camera1.scale / scaleScalingFactor));
-  camera1.focus.x = Math.round(tempFocusX * camera1.scale);
-  camera1.focus.y = Math.round(tempFocusY * camera1.scale);
+  let tempFocusX = s.currentCamera.focus.x / s.currentCamera.scale;
+  let tempFocusY = s.currentCamera.focus.y / s.currentCamera.scale;
+  s.currentCamera.scale = Math.max(1, Math.floor(s.currentCamera.scale / scaleScalingFactor));
+  s.currentCamera.focus.x = Math.round(tempFocusX * s.currentCamera.scale);
+  s.currentCamera.focus.y = Math.round(tempFocusY * s.currentCamera.scale);
   refresh();
 }
 
 function showHideControls() {
-  let buttonsDiv = document.getElementById('buttons-div');
-  let showHideControlsButton = document.getElementById('show-hide-controls-button');
-  buttonsDiv.hidden = !buttonsDiv.hidden;
-  showHideControlsButton.innerHTML = buttonsDiv.hidden ? '►' : '◄';
-
+  s.showControls = !s.showControls;
 }
 
 function showHideMore() {
-  let moreControlsDiv = document.getElementById('more-controls-div');
-  let showHideControlsButton = document.getElementById('show-hide-more-button');
-  moreControlsDiv.hidden = !moreControlsDiv.hidden;
-  showHideControlsButton.innerHTML = moreControlsDiv.hidden ? '▼' : '▲';
+  s.showMore = !s.showMore;
 }
 
 function fillAreaRandomFromInput() {
-  let dimensionInput = document.getElementById('fill-area-dim');
-  let densityInput = document.getElementById('fill-area-density');
-  let dim = dimensionInput.value;
-  let density = densityInput.value/100;
-  let { minValue, maxValue } = ruleSets[ruleSetSelect.value];
-  fillAreaRandom(board1, dim, density, minValue, maxValue);
+  let density = s.fillAreaDensity/100;
+  let { minValue, maxValue } = currentRuleSet;
+  fillAreaRandom(currentBoard, s.fillAreaDim, density, minValue, maxValue);
   refresh();
 }
 
 function showHideGrid() {
-  camera1.showGrid = !camera1.showGrid;
-  showGridCheckbox.checked = camera1.showGrid;
+  s.currentCamera.showGrid = !s.currentCamera.showGrid;
   refresh();
 }
 
 function toggleHexGrid() {
-  camera1.hexGrid = !camera1.hexGrid;
-  hexGridCheckbox.checked = camera1.hexGrid;
+  s.currentCamera.hexGrid = !s.currentCamera.hexGrid;
   refresh();
 }
 
 function loadSelectedRuleSet() {
-  //
+  currentRuleSet = ruleSets[ruleSetSelect.value];
 }
 
 function loadSelectedBoard() {
@@ -321,7 +331,7 @@ function loadSelectedBoard() {
   console.log(`user tried to load this board: ${selectedBoardName}`);
   let selectedBoard = predefinedBoards[selectedBoardName];
   if (selectedBoard) {
-    board1 = JSON.parse(JSON.stringify(selectedBoard));
+    currentBoard = JSON.parse(JSON.stringify(selectedBoard));
     refresh();
   }
 }
