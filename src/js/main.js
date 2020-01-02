@@ -15,6 +15,7 @@ var mouseState = {
 var s = { // scope (for ui)
   showControls: true,
   showMore: true,
+  showHelp: false,
   fillAreaDim: 50,
   fillAreaDensity: 50,
 };

@@ -116,6 +116,11 @@ input[type=range]::-moz-range-thumb {
   background: black;
   cursor: pointer; /* Cursor on hover */
 }
+
+.right {
+  float: right;
+}
+
 .icon-spacer {
   /* Use flexbox for slider wrapper element */
   display:flex;
@@ -150,4 +155,38 @@ input[type=range]::-moz-range-thumb {
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Opera and Firefox */
+}
+
+.modal-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,.4);
+}
+
+.modal {
+  position: absolute;
+  width: auto;
+  height: max-content;
+  background-color: white;
+  border-radius: 10px;
+  margin: 30px;
+  padding: 15px;
+  z-index: 5;
+}
+
+.modal p:first-of-type {
+  margin-top: 12px;
+}
+
+.cancel-button {
+  text-align: right;
+}
+
+.fas {
+  cursor: pointer;
+}
+
+.fas.no-pointer {
+  cursor: initial;
 }

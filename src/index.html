@@ -23,9 +23,10 @@
                         <span id="stop-playing"><i class="fas fa-stop" rv-show="player.playing"></i></span>
                     </span>
                     <i class="fas fa-step-forward" onclick="step()" title="shortcut: [Right Arrow]"></i>
+                    <i class="right fas fa-question-circle" onclick="s.showHelp=true"></i>
                 </p>
                 <p class="icon-spacer">
-                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-tachometer-alt no-pointer"></i>
                     <i class="fas fa-angle-left" onclick="speedDown()" title="shortcut: [Down Arrow]"></i>
                     <input type="range" rv-min="player.minIndex" rv-max="player.maxIndex" rv-value="player.index">
                     <i class="fas fa-angle-right" onclick="speedUp()" title="shortcut: [Up Arrow]"></i>
@@ -79,6 +80,22 @@
                     <i class="fas fa-angle-right" rv-hide="showControls"></i>
                 </p>
             </div>
+        </div>
+        <div class="modal-bg" rv-show="showHelp" onclick="s.showHelp=false"></div>
+        <div class="modal"  rv-show="showHelp" onclick="">
+            <div class="cancel-button">
+                <i class="fas fa-times" onclick="s.showHelp=false"></i>
+            </div>
+            <h3>Welcome to my Cellular Automata playground!</h3>
+            <p>
+                You can play around with different Cellular Automata, and see how things turn out.
+            </p>
+            <p>
+                Click on a square or hex to change its value. In rulesets that allow a range of values beyond 1 and 0, click to increase the value of a cell, and Shift+click to decrease the value.
+            </p>
+            <p>
+                Most of the common actions have keyboard shortcuts you can use—just hover your mouse over a button to see the keyboard shortcut for it.
+            </p>
         </div>
         <canvas id="canvas" tabindex="0" autofocus></canvas>
     </body>
