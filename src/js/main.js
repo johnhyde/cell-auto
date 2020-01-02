@@ -171,7 +171,7 @@ function clickListener(e) {
 
 function wheelListener(e) {
   if (logging.events) console.log('wheel');
-  camera1.focus.x -= Math.floor(e.deltaX/2);
+  camera1.focus.x += Math.floor(e.deltaX/2);
   camera1.focus.y += Math.floor(e.deltaY/2);
   refresh();
 }

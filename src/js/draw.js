@@ -86,8 +86,12 @@ function renderBoardWithCamera(ctx, board, camera) {
   }
   ctx.restore();
   // console.log(`Found incorrect squares: ${incorrectSquares.join(', ')}`);
-  if (camera.showGrid && !camera.hexGrid && camera.scale > 1) {
-    drawCartGrid(ctx, camera);
+  if (camera.showGrid) {
+    if (!camera.hexGrid && camera.scale > 1) {
+      drawCartGrid(ctx, camera);
+    } else if (camera.hexGrid && camera.scale > 6) {
+      drawHexGrid(ctx, camera);
+    }
   }
 }
 
@@ -114,6 +118,32 @@ function drawCartGrid(ctx, camera) {
   ctx.restore();
 }
 
+function drawHexGrid(ctx, camera) {
+  let cameraOffsetX = Math.floor(ctx.canvas.width/2) - camera.focus.x;
+  let cameraOffsetY = Math.floor(ctx.canvas.height/2) - camera.focus.y;
+  let yUnit = camera.scale * sin60;
+  let gridStartY = cameraOffsetY % yUnit;
+  let scaledHexRadius = hexRadius * camera.scale;
+  let scaledHexHalfSideLength = hexHalfSideLength * camera.scale;
+  let halfScale = .5 * camera.scale;
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = styleMappings['line'];
+  for (let y = gridStartY - yUnit; y < ctx.canvas.height + yUnit; y += yUnit) {
+    // we divide by sin60 here because y is already in hex
+    // we need it in cart to calculate x in hex
+    let gridStartX = (cameraOffsetX + ((y - cameraOffsetY)/sin60)*cos60) % camera.scale;
+    for (let x = gridStartX - camera.scale; x < ctx.canvas.width + camera.scale; x += camera.scale) {
+      ctx.moveTo(x, y + scaledHexRadius);
+      ctx.lineTo(x + halfScale, y + scaledHexHalfSideLength);
+      ctx.lineTo(x + halfScale, y - scaledHexHalfSideLength);
+      ctx.lineTo(x, y - scaledHexRadius);
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 function convertCartToHex([x, y]) {
   return [
     x + cos60 * y,
@@ -132,9 +162,25 @@ function convertPointFromScreenToBoard(ctx, [x, y], camera) {
   let boardX = (x - Math.floor(ctx.canvas.width/2) + camera.focus.x)/camera.scale;
   let boardY = (y - Math.floor(ctx.canvas.height/2) + camera.focus.y)/camera.scale;
   if (camera.hexGrid) {
-    [boardX, boardY] = convertHexToCart([boardX, boardY]);
-    // TODO: sort this out to map to real hexagons
-    return [Math.round(boardX), Math.round(boardY)];
+    let boardPoint = convertHexToCart([boardX, boardY]).map(Math.round);
+    let potentialPoints = [
+      boardPoint,
+      [boardPoint[0], boardPoint[1] + 1],
+      [boardPoint[0] + 1, boardPoint[1]],
+      [boardPoint[0], boardPoint[1] - 1],
+      [boardPoint[0] - 1, boardPoint[1]],
+    ];
+    let closestBoardPoint = potentialPoints.map(([x, y]) => {
+      // Find out how far from the point the different nearby hexes are
+      let [hexX, hexY] = convertCartToHex([x, y]);
+      return [
+        Math.sqrt(Math.pow(hexX - boardX, 2) + Math.pow(hexY - boardY, 2)),
+        [x, y],
+      ];
+    }).sort((a, b) => {  // Shortest distance is closest board point
+      return a[0] - b[0];
+    })[0][1]; // [0] gets the one with shortest distance, and [1] gets the point itself
+    return closestBoardPoint;
   } else {
     return [Math.floor(boardX), Math.floor(boardY)];
   }
