@@ -41,7 +41,7 @@ s.currentCamera = {
     y: 0,
   },
   showGrid: true,
-  hexGrid: false,
+  hexGrid: true,
 };
 var scaleScalingFactor = 1.2;
 
@@ -56,16 +56,18 @@ var colorMappings = {
   // '1': [191,191,191,255],
   // '2': [223,223,223,255],
   // '3': [255,255,255,255],
-  '-3': [0,0,255,255],
-  '-2': [0,127,255,255],
-  '-1': [0,255,255,255],
+  '-3': [0,0,255,1],
+  '-2': [0,127,255,1],
+  '-1': [0,255,255,1],
   '0': [0,0,0,0],
-  '1': [255,255,0,255],
-  '2': [255,127,0,255],
-  '3': [255,0,0,255],
-  'background': [127,127,127,255],
-  'line': [150,150,150,255],
-  '???': [0,255,0,255],
+  '1': [255,255,0,1],
+  '2': [255,127,0,1],
+  '3': [255,0,0,1],
+  '4': [200,0,100,1],
+  '5': [127,0,127,1],
+  'background': [127,127,127,1],
+  'line': [150,150,150,1],
+  '???': [0,255,0,1],
 };
 
 function getColorMappingStyle(key) {
@@ -163,8 +165,8 @@ function mouseOutListener(e) {
 function clickListener(e) {
   if (logging.events) console.log('click');
   if (!mouseState.isDrag) {
-    let minValue = Math.min(currentRuleSet.minValue || -Infinity, 0);
-    let maxValue = Math.max(currentRuleSet.maxValue || Infinity, 0);
+    let minValue = Math.min(currentRuleSet.minValue || 0, 0);
+    let maxValue = Math.max(currentRuleSet.maxValue || 0, 0);
     let boardPoint = convertPointFromScreenToBoard(ctx, [e.clientX, e.clientY], s.currentCamera);
     let increment = 1;
     if (e.shiftKey) {

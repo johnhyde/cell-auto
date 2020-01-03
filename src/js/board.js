@@ -60,7 +60,7 @@ function scaleBoard(board, [xScale, yScale]) {
     x = Number(x);
     for (let y in board[x]) {
       y = Number(y);
-      setBoardValue(newBoard, [x * xOffset, y * yOffset], board[x][y]);
+      setBoardValue(newBoard, [x * xScale, y * yScale], board[x][y]);
     }
   }
   return newBoard;
