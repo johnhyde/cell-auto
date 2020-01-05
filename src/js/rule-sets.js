@@ -1,6 +1,11 @@
 let hexTribesTribeCount = 5;
 
 var ruleSets = {
+  'Hex Tribes V2': {
+    minValue: 0,
+    maxValue: hexTribesTribeCount,
+    step: hexTribesV2Step,
+  },
   'Hex Tribes': {
     minValue: 0,
     maxValue: hexTribesTribeCount,
@@ -356,20 +361,20 @@ function hexTribesV2Step(board) {
           [x    , y - 1],
         ];
         let oppositeNeighbors = [
-          [x + 1, y    ],
           [x + 1, y - 1],
           [x    , y - 1],
           [x - 1, y    ],
           [x - 1, y + 1],
           [x    , y + 1],
+          [x + 1, y    ],
         ];
         let farOppositeNeighbors = [
-          [x + 2, y    ],
-          [x + 2, y - 2],
-          [x    , y - 2],
-          [x - 2, y    ],
-          [x - 2, y + 2],
-          [x    , y + 2],
+          [x + 1, y - 2],
+          [x - 1, y - 1],
+          [x - 2, y + 1],
+          [x - 1, y + 2],
+          [x + 1, y + 1],
+          [x + 2, y - 1],
         ];
         for (let i = 0; i < 6; i++) {
           let [neighborX, neighborY] = neighbors[i];
@@ -378,21 +383,26 @@ function hexTribesV2Step(board) {
           }
           let neighborTribe = getBoardValue(board, oppositeNeighbors[i]);
           if (neighborTribe !== 0) {
-            neighborCountBoard[neighborX][neighborY][neighborTribe - 1] += 1; //making tribe zero-indexed
-          }
-          let farNeighborTribe = getBoardValue(board, farOppositeNeighbors[i]);
-          if (farNeighborTribe !== 0) {
-            neighborCountBoard[neighborX][neighborY][farNeighborTribe - 1] += .75; //making tribe zero-indexed
+            neighborCountBoard[neighborX][neighborY][neighborTribe - 1] += .5; //making tribe zero-indexed
+            let farNeighborTribe = getBoardValue(board, farOppositeNeighbors[i]);
+            if (farNeighborTribe !== 0) {
+              neighborCountBoard[neighborX][neighborY][farNeighborTribe - 1] += .25; //making tribe zero-indexed
+            }
           }
           neighborCountBoard[neighborX][neighborY][tribe - 1] += 1; //making tribe zero-indexed
         }
       }
     }
   }
+  let countStats = {};
   for (let x in neighborCountBoard) {
     for (let y in neighborCountBoard[x]) {
       let neighborValues = neighborCountBoard[x][y];
       let biggestNeighborCount = neighborValues.slice(0).sort().reverse()[0];
+      if (!countStats[biggestNeighborCount *4]) {
+        countStats[biggestNeighborCount *4] = 0;
+      }
+      countStats[biggestNeighborCount *4]++;
       let winningTribe = neighborValues.indexOf(biggestNeighborCount) + 1; //make tribe one-indexed again
       let currentTribe = getBoardValue(board, [x, y]);
       let tied = neighborValues.indexOf(biggestNeighborCount, winningTribe) !== -1; // someone else got the same count
@@ -405,15 +415,19 @@ function hexTribesV2Step(board) {
           continue;
         }
       }
+      let maxLive = 4.5;
+      let minBorn = 3;
+      let minSurvive = 2.5;
       if (
-        biggestNeighborCount <= 4.75 && biggestNeighborCount >= 3
-        // || biggestNeighborCount === 7
-        || (biggestNeighborCount <= 3 && biggestNeighborCount >= 2.5 && currentTribe === winningTribe)
-        || (currentTribe !== 0 && currentTribe !== winningTribe && biggestNeighborCount >= 1.5)
+        biggestNeighborCount <= maxLive && biggestNeighborCount >= minBorn
+        // || biggestNeighborCount === 6
+        || (biggestNeighborCount <= maxLive && biggestNeighborCount >= minSurvive && currentTribe === winningTribe)
+        || (currentTribe !== 0 && currentTribe !== winningTribe)
         ) {
         setBoardValue(newBoard, [x, y], winningTribe);
       }
     }
   }
+  console.log(JSON.stringify(countStats, null, 2));
   return newBoard;
 }
